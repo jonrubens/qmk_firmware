@@ -53,6 +53,7 @@ enum ploopy_keycodes {
     DPI_CONFIG = SAFE_RANGE,
 #endif
     DRAG_SCROLL,
+    DRAG_SCROLL_TG, //differentiate momentary and toggle drag scroll
 #ifdef VIA_ENABLE
     PLOOPY_SAFE_RANGE = SAFE_RANGE,
 #else
