@@ -26,3 +26,5 @@ QUANTUM_LIB_SRC += analog.c
 SRC += opt_encoder.c
 
 DEFAULT_FOLDER = ploopyco/trackball/rev1_005
+
+TAP_DANCE_ENABLE = yes

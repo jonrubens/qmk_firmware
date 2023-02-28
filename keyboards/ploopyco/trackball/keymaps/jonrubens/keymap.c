@@ -15,29 +15,42 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+//  The number of keys that you are using tdth for
+#define TD_TH_COUNT 1
+// The maximum number of taps you want to define actions for on
+#define TD_TH_MAX_TAP 2
+
 #include QMK_KEYBOARD_H
+#include "users/jonrubens/tdth/tdth_macros.h"
 
-/* // Tap Dance Declarations */
-/* enum { */
-/*   TD_drag_scroll,   */
-/* }; */
+enum {
+TD_FN
+};
 
-/* void drag_scroll_toggle(qk_tap_dance_state_t *state, void *user_data) { */
+DEFINE_TD_STATES(TD_STATE(TD_FN));
 
-/* } */
+DEFINE_TD_KEYCODES(TD_DEF(TD_FN, ARRAY_LITERAL({
+    // Keycode to send when this key is tapped once
+    KC_BTN2,
+    // Keycode to send when this key is tapped twice
+    DRAG_SCROLL_TG
+    // etc...
+}), ARRAY_LITERAL({
+    // Keycode to press and hold when this key is held down
+    DRAG_SCROLL,
+    // Keycode to press and hold when this key is double tapped and held down
+    DRAG_SCROLL
+})));
 
-/* // Tap Dance definition */
-/* qk_tap_dance_action_t tap_dance_actions[] = { */
-/*     // Tap once for momentary and twice for staying in dragscroll */
-/*     [TD_drag_scroll] = ACTION_TAP_DANCE */
-/* }; */
+#include "users/jonrubens/tdth/tdth.c"
 
+DEFINE_TD_ACTIONS(TD_ACTION(TD_FN));
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [0] = LAYOUT( /* Base */
-        KC_BTN1, KC_BTN3, DRAG_SCROLL,
-          KC_BTN2, LT(1,KC_BTN4)
+        KC_BTN1, KC_BTN3, TD(TD_FN),
+          KC_BTN2, KC_BTN4
     ),
     [1] = LAYOUT(
         KC_BTN5, _______, DRAG_SCROLL_TG,
