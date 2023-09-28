@@ -57,6 +57,12 @@
 #ifndef ENCODER_BUTTON_COL
 #    define ENCODER_BUTTON_COL 0
 #endif
+#ifndef PLOOPY_DRAGSCROLL_SEMAPHORE
+#    define PLOOPY_DRAGSCROLL_SEMAPHORE 8
+#endif
+#ifndef PLOOPY_DRAGSCROLL_INVERT
+#    define PLOOPY_DRAGSCROLL_INVERT 1
+#endif
 
 keyboard_config_t keyboard_config;
 uint16_t          dpi_array[] = PLOOPY_DPI_OPTIONS;
@@ -138,6 +144,7 @@ void cycle_dpi(void) {
     pointing_device_set_cpi(dpi_array[keyboard_config.dpi_config]);
 }
 
+<<<<<<< HEAD:keyboards/ploopyco/ploopyco.c
 report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
     mouse_report = pointing_device_task_user(mouse_report);
     if (is_drag_scroll) {
@@ -150,6 +157,47 @@ report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
         mouse_report.v = -(int8_t)scroll_accumulated_v;
 #else
         mouse_report.v = (int8_t)scroll_accumulated_v;
+=======
+int8_t drag_scroll_x_semaphore = 0;
+int8_t drag_scroll_y_semaphore = 0;
+
+report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
+    if (is_drag_scroll) {
+        int16_t mouse_report_x_temp = mouse_report.x;
+        int16_t mouse_report_y_temp = mouse_report.y;
+        int16_t mouse_report_x_calc = 0;
+        int16_t mouse_report_y_calc = 0;
+        int16_t valx = (mouse_report_x_temp > 0) ? -1 : 1;
+        int16_t valy = (mouse_report_y_temp > 0) ? -1 : 1;
+
+        while (mouse_report_x_temp != 0) {
+            mouse_report_x_temp += valx;
+            drag_scroll_x_semaphore -= valx;
+
+            if (abs(drag_scroll_x_semaphore) >= PLOOPY_DRAGSCROLL_SEMAPHORE) {
+                mouse_report_x_calc -= valx;
+                drag_scroll_x_semaphore = 0;
+            }
+        }
+
+        while (mouse_report_y_temp != 0) {
+            mouse_report_y_temp += valy;
+            drag_scroll_y_semaphore -= valy;
+
+            if (abs(drag_scroll_y_semaphore) >= PLOOPY_DRAGSCROLL_SEMAPHORE) {
+                mouse_report_y_calc -= valy;
+                drag_scroll_y_semaphore = 0;
+            }
+        }
+
+        mouse_report.h = mouse_report_x_calc;
+
+#ifdef PLOOPY_DRAGSCROLL_INVERT
+        // Invert vertical scroll direction
+        mouse_report.v = -mouse_report_y_calc;
+#else
+        mouse_report.v = mouse_report_y_calc;
+>>>>>>> 40e1d36b37 (Add drag scroll and tap dance):keyboards/ploopyco/trackball/trackball.c
 #endif
 
         // Update accumulated scroll values by subtracting the integer parts
