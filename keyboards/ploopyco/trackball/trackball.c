@@ -46,6 +46,12 @@
 #ifndef PLOOPY_DRAGSCROLL_MULTIPLIER
 #    define PLOOPY_DRAGSCROLL_MULTIPLIER 0.75  // Variable-DPI Drag Scroll
 #endif
+#ifndef PLOOPY_DRAGSCROLL_SEMAPHORE
+#    define PLOOPY_DRAGSCROLL_SEMAPHORE 8
+#endif
+#ifndef PLOOPY_DRAGSCROLL_INVERT
+#    define PLOOPY_DRAGSCROLL_INVERT 1
+#endif
 
 keyboard_config_t keyboard_config;
 uint16_t          dpi_array[] = PLOOPY_DPI_OPTIONS;
@@ -115,21 +121,45 @@ void process_wheel(void) {
     encoder_update_kb(0, dir > 0);
 }
 
-report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
-    process_wheel();
+int8_t drag_scroll_x_semaphore = 0;
+int8_t drag_scroll_y_semaphore = 0;
 
+report_mouse_t pointing_device_task_kb(report_mouse_t mouse_report) {
     if (is_drag_scroll) {
-#ifdef PLOOPY_DRAGSCROLL_H_INVERT
-        // Invert horizontal scroll direction
-        mouse_report.h = -mouse_report.x;
-#else
-        mouse_report.h = mouse_report.x;
-#endif
+        int16_t mouse_report_x_temp = mouse_report.x;
+        int16_t mouse_report_y_temp = mouse_report.y;
+        int16_t mouse_report_x_calc = 0;
+        int16_t mouse_report_y_calc = 0;
+        int16_t valx = (mouse_report_x_temp > 0) ? -1 : 1;
+        int16_t valy = (mouse_report_y_temp > 0) ? -1 : 1;
+
+        while (mouse_report_x_temp != 0) {
+            mouse_report_x_temp += valx;
+            drag_scroll_x_semaphore -= valx;
+
+            if (abs(drag_scroll_x_semaphore) >= PLOOPY_DRAGSCROLL_SEMAPHORE) {
+                mouse_report_x_calc -= valx;
+                drag_scroll_x_semaphore = 0;
+            }
+        }
+
+        while (mouse_report_y_temp != 0) {
+            mouse_report_y_temp += valy;
+            drag_scroll_y_semaphore -= valy;
+
+            if (abs(drag_scroll_y_semaphore) >= PLOOPY_DRAGSCROLL_SEMAPHORE) {
+                mouse_report_y_calc -= valy;
+                drag_scroll_y_semaphore = 0;
+            }
+        }
+
+        mouse_report.h = mouse_report_x_calc;
+
 #ifdef PLOOPY_DRAGSCROLL_INVERT
         // Invert vertical scroll direction
-        mouse_report.v = -mouse_report.y;
+        mouse_report.v = -mouse_report_y_calc;
 #else
-        mouse_report.v = mouse_report.y;
+        mouse_report.v = mouse_report_y_calc;
 #endif
         mouse_report.x = 0;
         mouse_report.y = 0;
